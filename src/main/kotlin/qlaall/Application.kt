@@ -8,10 +8,8 @@ import io.ktor.html.*
 import kotlinx.html.*
 import kotlinx.css.*
 import io.ktor.application.*
+import io.ktor.http.content.*
 import io.ktor.response.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
 fun main(args: Array<String>): Unit =
@@ -41,36 +39,14 @@ fun Application.module(testing: Boolean = false) {
     install(ContentNegotiation) {
         json()
     }
-    runBlocking {
-        repeat(100_000) { // launch a lot of coroutines
-            launch {
-                delay(5000L)
-                print(".")
-            }
-        }
-    }
+//    runBlocking {
+//        repeat(100_000) { // launch a lot of coroutines
+//            launch {
+//                print(".")
+//            }
+//        }
+//    }
 
-    print("=======\n")
-    print("=======\n")
-
-
-
-    routing {
-        get("/") {
-            call.respondHtml {
-                head {
-                    title {
-                        + "hahaha"
-                    }
-                }
-                body {
-                    h1 {
-                        +"Hello from ME!"
-                    }
-                }
-            }
-        }
-    }
     routing {
         get("/json/kotlinx-serialization") {
             call.respond(mapOf("hello" to "world"))
@@ -101,8 +77,39 @@ fun Application.module(testing: Boolean = false) {
             }
         }
     }
+    routing {
+        //提供静态static路由
+        static("static"){
+//            暴露resources下static文件夹的全部文件
+            resources("static")
+        }
+    }
+    routing {
+//        这个是树形结构Demo
+        get("/d3/hierarchy") {
+            call.respondHtml { d3Test("/static/d3/hierarchy/hierarchyJs.js") }
+        }
+    }
+    routing {
+        get("d3/smoothZooming"){
+            call.respondHtml { d3Test("/static/d3/smoothZooming/smoothZoomingJs.js") }
+        }
+    }
 
+}
 
+fun HTML.d3Test(jsFileName:String){
+    head {
+        meta("charset","UTF-8")
+        title("D3.js测试页面")
+    }
+    body{
+        div() {
+            this.id = "chart"
+        }
+        script(src = "https://d3js.org/d3.v6.min.js"){}
+        script (src = "$jsFileName"){}
+    }
 }
 
 fun HTML.hello(){
